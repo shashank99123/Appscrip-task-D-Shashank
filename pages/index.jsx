@@ -17,9 +17,13 @@ const SORT_OPTIONS = [
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortValue, setSortValue] = useState("recommended");
 
-  // Fetch on client side (Netlify safe)
+  const [filterVisible, setFilterVisible] = useState(true);
+  const [sortValue, setSortValue] = useState("recommended");
+  const [sortOpen, setSortOpen] = useState(false);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+
+  // 🔥 CLIENT SIDE FETCH (NETLIFY SAFE)
   useEffect(() => {
     async function fetchProducts() {
       try {
@@ -27,7 +31,7 @@ export default function Home() {
         const data = await res.json();
         setProducts(data || []);
       } catch (error) {
-        console.error("Client fetch error:", error);
+        console.error("Fetch error:", error);
         setProducts([]);
       } finally {
         setLoading(false);
@@ -37,11 +41,14 @@ export default function Home() {
     fetchProducts();
   }, []);
 
-  // Safe Sorting
+  // ✅ Safe Sorting (with rating protection)
   const sortedProducts = useMemo(() => {
     const arr = [...products];
 
     switch (sortValue) {
+      case "newest":
+        return arr.reverse();
+
       case "price-high":
         return arr.sort((a, b) => (b.price || 0) - (a.price || 0));
 
@@ -58,31 +65,117 @@ export default function Home() {
     }
   }, [products, sortValue]);
 
+  const currentSort =
+    SORT_OPTIONS.find((o) => o.value === sortValue) ||
+    SORT_OPTIONS[0];
+
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Discover Our Products",
+    description:
+      "Browse our collection of sustainable handcrafted products",
+    numberOfItems: products.length,
+  };
+
   return (
     <>
       <Head>
-        <title>Discover Our Products – mettā muse</title>
+        <title>
+          Discover Our Products – mettā muse | Sustainable Fashion & Accessories
+        </title>
         <meta
           name="description"
           content="Explore curated sustainable products at mettā muse."
+        />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(schemaData),
+          }}
         />
       </Head>
 
       <Header />
 
       <main>
+        {/* Breadcrumb */}
+        <nav className={styles.breadcrumb}>
+          <span>HOME</span>
+          <span className={styles.breadcrumbSep}>›</span>
+          <span>SHOP</span>
+        </nav>
+
+        {/* Hero */}
         <section className={styles.hero}>
-          <h1>DISCOVER OUR PRODUCTS</h1>
+          <h1 className={styles.heroTitle}>
+            DISCOVER OUR PRODUCTS
+          </h1>
         </section>
 
+        {/* Toolbar */}
+        <div className={styles.toolbar}>
+          <div className={styles.toolbarLeft}>
+            <span className={styles.itemsCount}>
+              {products.length} ITEMS
+            </span>
+
+            <button
+              className={styles.filterToggle}
+              onClick={() => setFilterVisible(!filterVisible)}
+            >
+              {filterVisible ? "‹ HIDE FILTER" : "› SHOW FILTER"}
+            </button>
+          </div>
+
+          {/* SORT DROPDOWN */}
+          <div className={styles.sortWrapper}>
+            <button
+              className={styles.sortBtn}
+              onClick={() => setSortOpen(!sortOpen)}
+            >
+              {currentSort.label}
+            </button>
+
+            {sortOpen && (
+              <div className={styles.sortDropdown}>
+                {SORT_OPTIONS.map((opt) => (
+                  <div
+                    key={opt.value}
+                    className={`${styles.sortOption} ${
+                      sortValue === opt.value
+                        ? styles.sortOptionActive
+                        : ""
+                    }`}
+                    onClick={() => {
+                      setSortValue(opt.value);
+                      setSortOpen(false);
+                    }}
+                  >
+                    {opt.label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Layout */}
         <div className={styles.contentLayout}>
-          <FilterSidebar />
+          {filterVisible && (
+            <div className={styles.sidebarWrap}>
+              <FilterSidebar visible={true} />
+            </div>
+          )}
 
           <section className={styles.gridSection}>
             <h2 className={styles.srOnly}>Products</h2>
 
             {loading ? (
-              <p style={{ padding: "40px" }}>Loading products...</p>
+              <p style={{ padding: "40px" }}>
+                Loading products...
+              </p>
             ) : sortedProducts.length === 0 ? (
               <p style={{ padding: "40px" }}>
                 No products available.
