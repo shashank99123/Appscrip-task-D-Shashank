@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Head from "next/head";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
@@ -14,20 +14,34 @@ const SORT_OPTIONS = [
   { value: "price-low", label: "PRICE: LOW TO HIGH" },
 ];
 
-export default function Home({ products = [] }) {
-  const [filterVisible, setFilterVisible] = useState(true);
+export default function Home() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [sortValue, setSortValue] = useState("recommended");
-  const [sortOpen, setSortOpen] = useState(false);
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+
+  // Fetch on client side (Netlify safe)
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const res = await fetch("https://fakestoreapi.com/products");
+        const data = await res.json();
+        setProducts(data || []);
+      } catch (error) {
+        console.error("Client fetch error:", error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
 
   // Safe Sorting
   const sortedProducts = useMemo(() => {
     const arr = [...products];
 
     switch (sortValue) {
-      case "newest":
-        return arr.reverse();
-
       case "price-high":
         return arr.sort((a, b) => (b.price || 0) - (a.price || 0));
 
@@ -44,39 +58,13 @@ export default function Home({ products = [] }) {
     }
   }, [products, sortValue]);
 
-  const currentSort =
-    SORT_OPTIONS.find((o) => o.value === sortValue) ||
-    SORT_OPTIONS[0];
-
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: "Discover Our Products",
-    description:
-      "Browse our collection of sustainable handcrafted products",
-    numberOfItems: products.length,
-  };
-
   return (
     <>
       <Head>
-        <title>
-          Discover Our Products – mettā muse | Sustainable Fashion
-        </title>
-
+        <title>Discover Our Products – mettā muse</title>
         <meta
           name="description"
           content="Explore curated sustainable products at mettā muse."
-        />
-
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="robots" content="index, follow" />
-
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(schemaData),
-          }}
         />
       </Head>
 
@@ -84,37 +72,31 @@ export default function Home({ products = [] }) {
 
       <main>
         <section className={styles.hero}>
-          <h1 className={styles.heroTitle}>
-            DISCOVER OUR PRODUCTS
-          </h1>
+          <h1>DISCOVER OUR PRODUCTS</h1>
         </section>
 
         <div className={styles.contentLayout}>
-          <div
-            className={`${styles.sidebarWrap} ${
-              !filterVisible ? styles.sidebarWrapHidden : ""
-            }`}
-          >
-            <FilterSidebar />
-          </div>
+          <FilterSidebar />
 
           <section className={styles.gridSection}>
             <h2 className={styles.srOnly}>Products</h2>
 
-            <div className={styles.productGrid}>
-              {sortedProducts.length === 0 ? (
-                <p style={{ padding: "40px" }}>
-                  No products available.
-                </p>
-              ) : (
-                sortedProducts.map((product) => (
+            {loading ? (
+              <p style={{ padding: "40px" }}>Loading products...</p>
+            ) : sortedProducts.length === 0 ? (
+              <p style={{ padding: "40px" }}>
+                No products available.
+              </p>
+            ) : (
+              <div className={styles.productGrid}>
+                {sortedProducts.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
                   />
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </main>
@@ -122,40 +104,4 @@ export default function Home({ products = [] }) {
       <Footer />
     </>
   );
-}
-
-/* =====================================
-   STATIC GENERATION (NETLIFY SAFE)
-===================================== */
-
-export async function getStaticProps() {
-  try {
-    const res = await fetch("https://fakestoreapi.com/products", {
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch products");
-    }
-
-    const products = await res.json();
-
-    return {
-      props: {
-        products: products || [],
-      },
-      revalidate: 60, // Regenerate every 60 seconds
-    };
-  } catch (error) {
-    console.error("Static Fetch Error:", error);
-
-    return {
-      props: {
-        products: [],
-      },
-      revalidate: 60,
-    };
-  }
 }
