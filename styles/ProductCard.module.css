@@ -1,0 +1,122 @@
+.card {
+  position: relative;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 2px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover .image {
+  transform: scale(1.03);
+}
+
+/* Image container — fixed small height like Flipkart */
+.imageWrap {
+  position: relative;
+  overflow: hidden;
+  background: #f8f8f8;
+  width: 100%;
+  height: 200px;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  transition: transform 0.35s ease;
+  padding: 8px;
+}
+
+/* Badge top-left */
+.badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #fff;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  pointer-events: none;
+  border: 1px solid #e0e0e0;
+}
+
+.badgeOut {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+/* Info section */
+.info {
+  padding: 10px 10px 12px;
+}
+
+/* Name row: title left, heart right */
+.nameRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #212121;
+  font-family: var(--font-body);
+  margin: 0;
+  line-height: 1.4;
+  /* clamp to 2 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+  text-transform: none;
+}
+
+/* Heart / Wishlist button */
+.wishlistBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+  margin-top: 1px;
+}
+
+.wishlistBtn:hover {
+  transform: scale(1.2);
+}
+
+/* Price text */
+.price {
+  margin-top: 6px;
+}
+
+.priceLink {
+  font-size: 11px;
+  color: #888;
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+.priceLink:hover {
+  text-decoration: underline;
+  color: #000;
+}
